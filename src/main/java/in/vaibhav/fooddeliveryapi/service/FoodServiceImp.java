@@ -82,7 +82,7 @@ public class FoodServiceImp implements FoodService {
     }
 
     @Override
-    public List<FoodResponse> readfoods() {
+    public List<FoodResponse> readFoods() {
         List<FoodEntity> databaseEntries=foodRepository.findAll();
         return databaseEntries.stream().map(object-> convertToResponse(object)).collect(Collectors.toList());
     }

@@ -1,63 +1,47 @@
-import React, { useState } from 'react'; 
-import { assets } from '../../assets/assets';
-import axios from 'axios';
-import { addFood } from '../../assets/services/sercvice';
-import { toast } from 'react-toastify';
+import React, { useState } from "react";
+import { assets } from "../../assets/assets";
+import { addFood } from "../../assets/services/service";
+import { toast } from "react-toastify";
 
 const AddFood = () => {
-  const [image, setImage] = useState(null); 
-  const [data, setData]=useState({
-    name:'',
-    description:'',
-    price:'',
-    category:'Biryani'
+  const [image, setImage] = useState(null);
 
+  const [data, setData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    category: "Biryani",
   });
-  const onChangeHandler=(event)=>{
-    const name=event.target.name;
-    const value=event.target.value;
-    setData(data=>({...data,[name]: value}));
 
-  }
-  const onSubmitHandler=async(event) =>{
+  const onChangeHandler = (event) => {
+    const { name, value } = event.target;
+    setData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
-    if(!image){
-      toast.error('Please Select An Image.');
+
+    if (!image) {
+      toast.error("Please select an image.");
       return;
-
     }
-    try{
-      await addFood(data,image);
-      toast.success('Food Added Successfully.');
-      setData({name:'',description:'',category:'Biryani',price:''})
+
+    try {
+      await addFood(data, image); 
+      toast.success("Food added successfully!");
+
+      setData({
+        name: "",
+        description: "",
+        price: "",
+        category: "Biryani",
+      });
       setImage(null);
-      
-
-    }catch(error){
-      toast.error('Error adding food.');
-      
+    } catch (error) {
+      toast.error("Error adding food.");
+      console.error(error);
     }
-
-    const formData=new FormData();
-    formData.append('food',JSON.stringify(data));
-    formData.append('file',image);
-
-    try{
-      const response=await axios.post('http://localhost:8080/api/foods',formData,{headers:{"Content-Type":"multipart/form-data"}})
-      if(response.status==200){
-        alert('Food added successfully.');
-        setData({name:'',description:'',category:'Biryani',price:''});
-        setImage(null);
-      }
-
-    }
-    catch(error){
-      console.log('Error',error);
-      alert('Error Adding Food.');
-      
-
-    }
-  }
+  };
 
   return (
     <div className="mx-2 mt-2">
@@ -65,39 +49,60 @@ const AddFood = () => {
         <div className="card col-md-4">
           <div className="card-body">
             <h2 className="mb-4">Add Food</h2>
+
             <form onSubmit={onSubmitHandler}>
               <div className="mb-3">
-                <label htmlFor="image" className="form-label">
+                <label htmlFor="image">
                   <img
-                    src={image ? URL.createObjectURL(image) : assets.upload} 
+                    src={image ? URL.createObjectURL(image) : assets.upload}
                     alt="food"
-                    width={98}
-                    style={{ cursor: 'pointer' }}
+                    width={100}
+                    style={{ cursor: "pointer" }}
                   />
                 </label>
                 <input
                   type="file"
-                  className="form-control"
                   id="image"
-                  required
                   hidden
-                  onChange={(e) => setImage(e.target.files[0])} 
+                  required
+                  onChange={(e) => setImage(e.target.files[0])}
                 />
               </div>
 
               <div className="mb-3">
-                <label htmlFor="name" className="form-label">Name</label>
-                <input type="text" className="form-control" id="name" required name="name"  onChange={onChangeHandler} value={data.name}/>
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="form-control"
+                  placeholder="Chicken Biryani"
+                  value={data.name}
+                  onChange={onChangeHandler}
+                  required
+                />
               </div>
 
               <div className="mb-3">
-                <label htmlFor="description" className="form-label">Description</label>
-                <textarea className="form-control" id="description" rows="5" required name="description" onChange={onChangeHandler} value={data.description}></textarea>
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  className="form-control"
+                  rows="4"
+                  placeholder="Write description"
+                  value={data.description}
+                  onChange={onChangeHandler}
+                  required
+                />
               </div>
 
               <div className="mb-3">
-                <label htmlFor="category" className="form-label">Category</label>
-                <select name="category" id="category" className="form-control" onChange={onChangeHandler} value={data.category}>
+                <label>Category</label>
+                <select
+                  name="category"
+                  className="form-control"
+                  value={data.category}
+                  onChange={onChangeHandler}
+                >
                   <option value="Biryani">Biryani</option>
                   <option value="Cake">Cake</option>
                   <option value="Burger">Burger</option>
@@ -108,12 +113,23 @@ const AddFood = () => {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="price" className="form-label">Price</label>
-                <input type="number" name="price" id="price" className="form-control" onChange={onChangeHandler} value={data.price}/>
+                <label>Price</label>
+                <input
+                  type="number"
+                  name="price"
+                  className="form-control"
+                  placeholder="₹200"
+                  value={data.price}
+                  onChange={onChangeHandler}
+                  required
+                />
               </div>
 
-              <button type="submit" className="btn btn-primary">Save</button>
+              <button className="btn btn-primary" type="submit">
+                Save
+              </button>
             </form>
+
           </div>
         </div>
       </div>
