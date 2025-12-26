@@ -1,6 +1,7 @@
 package in.vaibhav.fooddeliveryapi.filters;
 
 import in.vaibhav.fooddeliveryapi.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,13 +30,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        // ✅ Skip CORS preflight
+        // Skip CORS preflight
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
 
         String path = request.getServletPath();
-        return path.startsWith("/api/login") || path.startsWith("/api/register");
+
+        return path.startsWith("/api/login")
+                || path.startsWith("/api/register")
+                || path.startsWith("/api/foods");
     }
 
     @Override
@@ -53,9 +57,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email = jwtUtil.extractUsername(token);
+        String email;
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            email = jwtUtil.extractUsername(token);
+        } catch (ExpiredJwtException e) {
+            // ✅ TOKEN EXPIRED → return 401 cleanly
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("JWT token expired. Please login again.");
+            return;
+        } catch (Exception e) {
+            // Invalid token
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid JWT token.");
+            return;
+        }
+
+        if (email != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails =
                     userDetailsService.loadUserByUsername(email);
@@ -73,7 +92,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
             }
         }
 
